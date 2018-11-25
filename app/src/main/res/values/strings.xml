@@ -1,0 +1,10 @@
+<resources>
+    <string name="app_name">My Baking App</string>
+    <string name="error_message">Error loading information</string>
+    <string name="next_step">Next Step</string>
+    <string name="ingredients_title">Ingredients:</string>
+    <string name="steps_title">Steps:</string>
+    <string name="appwidget_text">EXAMPLE</string>
+    <string name="add_widget">Add widget</string>
+    <string name="action_favorite">Select</string>
+</resources>

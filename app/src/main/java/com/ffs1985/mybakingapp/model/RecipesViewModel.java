@@ -1,7 +1,13 @@
 package com.ffs1985.mybakingapp.model;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.IdlingResource;
+
 import com.ffs1985.mybakingapp.RecipeWidget;
 import com.ffs1985.mybakingapp.data.RecipesUtil;
+import com.ffs1985.mybakingapp.util.BasicIdlingResource;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -19,6 +25,10 @@ public class RecipesViewModel implements Callback<List<Recipe>> {
     private int stepNumber;
     private static RecipesViewModel instance;
     private List<RecipeObserver> observers;
+    private boolean isLoaded;
+
+    @Nullable
+    BasicIdlingResource basicIdlingResource;
 
     public static RecipesViewModel getInstance() {
         if (instance == null) {
@@ -28,7 +38,9 @@ public class RecipesViewModel implements Callback<List<Recipe>> {
     }
 
     private RecipesViewModel() {
-        RecipesUtil.loadData(this);
+        isLoaded = false;
+        observers = new ArrayList<>();
+        RecipesUtil.loadData(this, basicIdlingResource);
     }
 
     @Override
@@ -45,7 +57,10 @@ public class RecipesViewModel implements Callback<List<Recipe>> {
         if (recipes.size() > 0) {
             widgetRecipe = response.body().get(0);
         }
-
+        if (basicIdlingResource != null) {
+            basicIdlingResource.setIdleState(true);
+        }
+        isLoaded = true;
     }
 
     @Override
@@ -161,5 +176,18 @@ public class RecipesViewModel implements Callback<List<Recipe>> {
                 observer.onWidgetRecipeSelected(recipe);
             }
         }
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public IdlingResource getIdlingResource() {
+        if (basicIdlingResource == null) {
+            basicIdlingResource = new BasicIdlingResource();
+        }
+        return basicIdlingResource;
+    }
+
+    public boolean isDataLoaded() {
+        return isLoaded;
     }
 }

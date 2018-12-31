@@ -2,11 +2,15 @@ package com.ffs1985.mybakingapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.VisibleForTesting;
+import android.support.test.espresso.IdlingResource;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.support.v7.widget.Toolbar;
 
 import com.ffs1985.mybakingapp.fragments.MasterListFragment.OnStepClickListener;
 import com.ffs1985.mybakingapp.fragments.StepDetailFragment;
@@ -25,18 +29,33 @@ public class RecipeActivity extends AppCompatActivity implements RecipeObserver,
     private boolean mTwoPane;
     private StepDetailFragment stepDetailFragment;
 
+    private static final String RECIPE_ID = "recipe_id";
+
     private Menu menu;
+    private int selectedRecipe;
 
     @Override
     protected void onCreate(Bundle saveInstanceState) {
         super.onCreate(saveInstanceState);
-        setContentView(R.layout.activity_recipe);
-        if (findViewById(R.id.two_pane_layout) != null) {
-           mTwoPane = true;
-        }
-
         recipesViewModel = RecipesViewModel.getInstance();
         recipesViewModel.addObserver(this);
+        Intent intentThatStartedThisActivity = getIntent();
+        if (intentThatStartedThisActivity != null) {
+            selectedRecipe = intentThatStartedThisActivity.getIntExtra(RECIPE_ID, 1);
+            if(recipesViewModel.isDataLoaded()) {
+                recipesViewModel.loadRecipe(selectedRecipe);
+                loadRecipeInfo();
+            }
+        }
+        setContentView(R.layout.activity_recipe);
+        if (findViewById(R.id.two_pane_layout) != null) {
+            mTwoPane = true;
+        }
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+    }
+
+    private void loadRecipeInfo() {
         recipe = recipesViewModel.getRecipe();
         setRecipeInfo();
         setTitle(recipe.getName());
@@ -59,13 +78,13 @@ public class RecipeActivity extends AppCompatActivity implements RecipeObserver,
 
     @Override
     public void recipesUpdated(List<Recipe> recipeList) {
-        // NOTHING.
+        recipesViewModel.loadRecipe(selectedRecipe);
     }
 
     @Override
     public void onRecipeSelected(Recipe recipe) {
         this.recipe = recipe;
-        setRecipeInfo();
+        loadRecipeInfo();
     }
 
     @Override
@@ -132,5 +151,11 @@ public class RecipeActivity extends AppCompatActivity implements RecipeObserver,
 
     private void setRecipeAsSelected() {
         recipesViewModel.setWidgetRecipe();
+    }
+
+    @VisibleForTesting
+    @NonNull
+    public IdlingResource getIdlingResource() {
+        return recipesViewModel.getIdlingResource();
     }
 }

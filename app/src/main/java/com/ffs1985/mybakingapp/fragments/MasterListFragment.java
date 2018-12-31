@@ -26,7 +26,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MasterListFragment extends Fragment implements StepsAdapter.StepsAdapterOnClickHandler{
+public class MasterListFragment extends Fragment implements StepsAdapter.StepsAdapterOnClickHandler, RecipeObserver{
     private Recipe recipe;
     private RecipesViewModel recipesViewModel;
     private IngredientsAdapter ingredientsAdapter;
@@ -37,6 +37,26 @@ public class MasterListFragment extends Fragment implements StepsAdapter.StepsAd
     @BindView(R.id.recipe_detail_servings) TextView tvServings;
 
     OnStepClickListener mCallback;
+
+    @Override
+    public void recipesUpdated(List<Recipe> recipeList) {
+        // NOTHING.
+    }
+
+    @Override
+    public void onRecipeSelected(Recipe recipe) {
+        setRecipeInfo();
+    }
+
+    @Override
+    public void onStepSelected(Step step, int stepNumber) {
+        // NOTHING.
+    }
+
+    @Override
+    public void onWidgetRecipeSelected(Recipe recipe) {
+        // NOTHING.
+    }
 
     public interface OnStepClickListener {
         void onMasterStepSelected(Step step);
@@ -62,7 +82,9 @@ public class MasterListFragment extends Fragment implements StepsAdapter.StepsAd
         mStepsRecyclerView.setLayoutManager(listLayoutManager2);
         stepsAdapter = new StepsAdapter(this);
         mStepsRecyclerView.setAdapter(stepsAdapter);
-        setRecipeInfo();
+        if (recipesViewModel.isDataLoaded()) {
+            setRecipeInfo();
+        }
         return view;
     }
 

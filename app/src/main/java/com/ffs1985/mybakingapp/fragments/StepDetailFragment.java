@@ -1,5 +1,6 @@
 package com.ffs1985.mybakingapp.fragments;
 
+import android.annotation.SuppressLint;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -33,11 +34,17 @@ public class StepDetailFragment extends Fragment {
     private RecipesViewModel recipesViewModel;
     private SimpleExoPlayer mExoPlayer;
     private Step step;
+    private String SELECTED_POSITION = "selected_position";
+    private long position = 0;
 
     public StepDetailFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (savedInstanceState != null) {
+            position = savedInstanceState.getLong(SELECTED_POSITION, 0);
+        }
+
         View view = inflater.inflate(R.layout.fragment_step_detail, container, false);
         ButterKnife.bind(this, view);
 
@@ -49,6 +56,39 @@ public class StepDetailFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+        if (Util.SDK_INT > 23) {
+            initializePlayer();
+        }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        hideSystemUi();
+        if ((Util.SDK_INT <= 23 || mExoPlayer == null)) {
+            initializePlayer();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (Util.SDK_INT <= 23) {
+            releasePlayer();
+        }
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (Util.SDK_INT > 23) {
+            releasePlayer();
+        }
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
         releasePlayer();
@@ -56,7 +96,7 @@ public class StepDetailFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle currentState) {
-
+        currentState.putLong(SELECTED_POSITION, mExoPlayer.getCurrentPosition());
     }
 
     public void setStep(Step step) {
@@ -78,6 +118,7 @@ public class StepDetailFragment extends Fragment {
                         getActivity(), userAgent), new DefaultExtractorsFactory(), null, null);
                 mExoPlayer.prepare(mediaSource);
                 mExoPlayer.setPlayWhenReady(false);
+                mExoPlayer.seekTo(position);
             }
         } else {
             mPlayerView.setVisibility(View.GONE);
@@ -95,5 +136,15 @@ public class StepDetailFragment extends Fragment {
     private void setStepInfo() {
         this.tvDescription.setText(step.getDescription());
         getActivity().setTitle(step.getShortDescription());
+    }
+
+    @SuppressLint("InlinedApi")
+    private void hideSystemUi() {
+        mPlayerView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
+                | View.SYSTEM_UI_FLAG_FULLSCREEN
+                | View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                | View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
     }
 }

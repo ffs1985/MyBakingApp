@@ -26,6 +26,7 @@ public class StepActivity extends AppCompatActivity implements RecipeObserver, V
     private Step step;
     private StepDetailFragment stepDetailFragment;
     private RecipesViewModel recipesViewModel;
+    private final String STEP_FRAGMENT_TAG = getClass().getSimpleName();
 
     @Override
     protected void onCreate(Bundle saveInstanceState) {
@@ -72,20 +73,17 @@ public class StepActivity extends AppCompatActivity implements RecipeObserver, V
     }
 
     private void setStepInfo() {
-        if (stepDetailFragment == null) {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        StepDetailFragment existingFragment = (StepDetailFragment) fragmentManager.findFragmentByTag(STEP_FRAGMENT_TAG);
+        if (existingFragment == null) {
             stepDetailFragment = new StepDetailFragment();
             stepDetailFragment.setStep(step);
-            FragmentManager fragmentManager = getSupportFragmentManager();
             fragmentManager.beginTransaction()
-                    .add(R.id.step_fragment_container, stepDetailFragment)
+                    .add(R.id.step_fragment_container, stepDetailFragment, STEP_FRAGMENT_TAG)
                     .commit();
         } else {
-            stepDetailFragment = new StepDetailFragment();
+            stepDetailFragment = existingFragment;
             stepDetailFragment.setStep(step);
-            FragmentManager fragmentManager = getSupportFragmentManager();
-            fragmentManager.beginTransaction()
-                    .replace(R.id.step_fragment_container, stepDetailFragment)
-                    .commit();
         }
     }
 

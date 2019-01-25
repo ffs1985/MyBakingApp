@@ -58,7 +58,7 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (Util.SDK_INT > 23) {
+        if (Util.SDK_INT > 23 && mExoPlayer == null) {
             initializePlayer();
         }
     }
@@ -67,7 +67,7 @@ public class StepDetailFragment extends Fragment {
     public void onResume() {
         super.onResume();
         hideSystemUi();
-        if ((Util.SDK_INT <= 23 || mExoPlayer == null)) {
+        if ((Util.SDK_INT <= 23 && mExoPlayer == null)) {
             initializePlayer();
         }
     }
@@ -76,6 +76,7 @@ public class StepDetailFragment extends Fragment {
     public void onPause() {
         super.onPause();
         if (Util.SDK_INT <= 23) {
+            position = mExoPlayer.getCurrentPosition();
             releasePlayer();
         }
     }
@@ -83,7 +84,8 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        if (Util.SDK_INT > 23) {
+        if (Util.SDK_INT > 23 && mExoPlayer != null) {
+            position = mExoPlayer.getCurrentPosition();
             releasePlayer();
         }
     }
@@ -96,7 +98,7 @@ public class StepDetailFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle currentState) {
-        currentState.putLong(SELECTED_POSITION, mExoPlayer.getCurrentPosition());
+        currentState.putLong(SELECTED_POSITION, position);
     }
 
     public void setStep(Step step) {

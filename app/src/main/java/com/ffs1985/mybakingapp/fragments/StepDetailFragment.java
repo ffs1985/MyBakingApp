@@ -35,14 +35,17 @@ public class StepDetailFragment extends Fragment {
     private SimpleExoPlayer mExoPlayer;
     private Step step;
     private String SELECTED_POSITION = "selected_position";
-    private long position = 0;
+    private String PLAYER_STATE = "playerState";
+    private long playerPosition = 0;
+    private boolean isPlayWhenReady = false;
 
     public StepDetailFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            position = savedInstanceState.getLong(SELECTED_POSITION, 0);
+            playerPosition = savedInstanceState.getLong(SELECTED_POSITION, 0);
+            isPlayWhenReady = savedInstanceState.getBoolean(PLAYER_STATE, false);
         }
 
         View view = inflater.inflate(R.layout.fragment_step_detail, container, false);
@@ -58,7 +61,7 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-        if (Util.SDK_INT > 23 && mExoPlayer == null) {
+        if (mExoPlayer == null) {
             initializePlayer();
         }
     }
@@ -67,7 +70,7 @@ public class StepDetailFragment extends Fragment {
     public void onResume() {
         super.onResume();
         hideSystemUi();
-        if ((Util.SDK_INT <= 23 && mExoPlayer == null)) {
+        if (mExoPlayer == null) {
             initializePlayer();
         }
     }
@@ -75,8 +78,9 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        if (Util.SDK_INT <= 23) {
-            position = mExoPlayer.getCurrentPosition();
+        if (mExoPlayer != null) {
+            playerPosition = mExoPlayer.getCurrentPosition();
+            isPlayWhenReady = mExoPlayer.getPlayWhenReady();
             releasePlayer();
         }
     }
@@ -84,8 +88,9 @@ public class StepDetailFragment extends Fragment {
     @Override
     public void onStop() {
         super.onStop();
-        if (Util.SDK_INT > 23 && mExoPlayer != null) {
-            position = mExoPlayer.getCurrentPosition();
+        if (mExoPlayer != null) {
+            playerPosition = mExoPlayer.getCurrentPosition();
+            isPlayWhenReady = mExoPlayer.getPlayWhenReady();
             releasePlayer();
         }
     }
@@ -98,7 +103,10 @@ public class StepDetailFragment extends Fragment {
 
     @Override
     public void onSaveInstanceState(Bundle currentState) {
-        currentState.putLong(SELECTED_POSITION, position);
+        // here is using playerPosition that is stored onPause() and onResume() since this methods are called
+        // before this method. and since both call releasePlayer() exoPlayer is already null here.
+        currentState.putLong(SELECTED_POSITION, playerPosition);
+        currentState.putBoolean(PLAYER_STATE, isPlayWhenReady);
     }
 
     public void setStep(Step step) {
@@ -119,8 +127,8 @@ public class StepDetailFragment extends Fragment {
                         new DefaultDataSourceFactory(
                         getActivity(), userAgent), new DefaultExtractorsFactory(), null, null);
                 mExoPlayer.prepare(mediaSource);
-                mExoPlayer.setPlayWhenReady(false);
-                mExoPlayer.seekTo(position);
+                mExoPlayer.setPlayWhenReady(isPlayWhenReady);
+                mExoPlayer.seekTo(playerPosition);
             }
         } else {
             mPlayerView.setVisibility(View.GONE);
